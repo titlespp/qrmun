@@ -9,11 +9,12 @@ import firebase from 'firebase'
 
 class App extends Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     firebaseInit()
     this.state = {
-      chatList: [] 
+      chatList: [],
+      totalChat: 0 
     }
   }
 
@@ -23,20 +24,26 @@ class App extends Component {
     db.settings({ timestampsInSnapshots: true })
     var doc = db.collection('messages')
     var observer = doc.orderBy("date_created").onSnapshot(querySnapshot => {
-      // console.log(querySnapshot.docs.map(doc => {
-      //   return doc.data()
-      // }))
-      
-      let chat = querySnapshot.docs.map(doc => {
+        let chat = querySnapshot.docs.map(doc => {
+        let isNew = true
+        this.state.chatList.forEach(e => {
+          if (e.id === doc.id) {
+            isNew = false
+          }
+        })
+        if (isNew) {
+          let newMessage = doc.data()
+          newMessage.id = doc.id
+          this.setState(prev => ({
+            chatList: [...prev.chatList,newMessage],
+            totalChat: (prev.totalChat + 1)
+          }), () => {
+            console.log(this.state)
+          })
+        }
         return doc.data()
       })
-
-      console.log(chat)
-
-      this.setState(prevState => ({
-        arrayvar: [...prevState.arrayvar, newelement]
-      }))
-        
+      
     }, err => {
       console.log(err)
     }, () => {
@@ -46,8 +53,14 @@ class App extends Component {
   }
 
   render() {
+    
+    let chatlog = this.state.chatList.map((chat) => {
+      return <ul key={chat.date_created}>{chat.message}</ul>
+    })
+
     return (
       <div className="App">
+      <div>{chatlog}</div>
         {/* <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Welcome to React</h1>
