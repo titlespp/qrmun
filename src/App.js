@@ -5,8 +5,6 @@ import { init as firebaseInit } from './firebaseconfig'
 import firebase from 'firebase'
 
 
-
-
 class App extends Component {
 
   constructor(props) {
@@ -25,23 +23,19 @@ class App extends Component {
     var doc = db.collection('messages')
     var observer = doc.orderBy("date_created").onSnapshot(querySnapshot => {
         let chat = querySnapshot.docs.map(doc => {
-        let isNew = true
-        this.state.chatList.forEach(e => {
-          if (e.id === doc.id) {
-            isNew = false
+          if (this.state.chatList.findIndex(e => e.id === doc.id) === -1) {
+            let newMessage = doc.data()
+            newMessage.id = doc.id
+            newMessage.number = Math.floor(Math.random() * 11)
+            // newMessage.expire = 60
+            this.setState(prev => ({
+              chatList: [...prev.chatList,newMessage],
+              totalChat: (prev.totalChat + 1)
+            }), () => {
+              console.log(this.state)
+            })
           }
-        })
-        if (isNew) {
-          let newMessage = doc.data()
-          newMessage.id = doc.id
-          this.setState(prev => ({
-            chatList: [...prev.chatList,newMessage],
-            totalChat: (prev.totalChat + 1)
-          }), () => {
-            console.log(this.state)
-          })
-        }
-        return doc.data()
+          return doc.data()
       })
       
     }, err => {
@@ -55,7 +49,7 @@ class App extends Component {
   render() {
     
     let chatlog = this.state.chatList.map((chat) => {
-      return <ul key={chat.date_created}>{chat.message}</ul>
+      return <ul key={chat.id} className={ chat.number % 2 === 0 ? 'Color1' : 'Color2'}>{chat.message}</ul>
     })
 
     return (
